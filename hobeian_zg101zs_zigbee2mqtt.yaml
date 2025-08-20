@@ -1,0 +1,206 @@
+# ===================================================
+# CREACIÓN DEL HELPER VIA INTERFAZ WEB (RECOMENDADO)
+# ===================================================
+
+# OPCIÓN 1 - Crear Helper desde la Interfaz Web (MÁS FÁCIL):
+# 1. Ve a: Configuración → Dispositivos y Servicios → Helpers
+# 2. Haz clic en "Crear Helper" (botón azul)
+# 3. Selecciona "Texto"
+# 4. Configura:
+#    - Nombre: "ZG-101ZS Último Evento"
+#    - ID de entidad: input_text.zg101zs_ultimo_evento
+#    - Longitud máxima: 255
+# 5. Guarda y ya estará disponible para seleccionar en el blueprint
+
+# OPCIÓN 2 - Agregar manualmente a configuration.yaml (ALTERNATIVA):
+input_text:
+  zg101zs_ultimo_evento:
+    name: "ZG-101ZS Último Evento"
+    max: 255
+    initial: ""
+
+# ===================================================
+# EJEMPLO DE USO DEL BLUEPRINT
+# ===================================================
+
+automation:
+  - alias: "Control de Luces con ZG-101ZS"
+    use_blueprint:
+      path: hobeian_zg101zs_zigbee2mqtt.yaml
+      input:
+        # Configuración del dispositivo (solo la entidad sensor de acción)
+        controller_entity: sensor.zg_101zs_action  # Cambia por el nombre real de tu sensor
+        
+        # Helper para almacenar eventos (seleccionar desde dropdown)
+        helper_last_controller_event: input_text.zg101zs_ultimo_evento
+        
+        # Configurar acciones para cada botón
+        # Botón 1 - Luz del salón
+        action_button_1_short:
+          - service: light.toggle
+            target:
+              entity_id: light.salon
+        
+        action_button_1_long:
+          - service: light.turn_on
+            target:
+              entity_id: light.salon
+            data:
+              brightness_pct: 100
+        
+        action_button_1_double:
+          - service: scene.turn_on
+            target:
+              entity_id: scene.salon_relajante
+        
+        # Botón 2 - Luz del dormitorio
+        action_button_2_short:
+          - service: light.toggle
+            target:
+              entity_id: light.dormitorio
+        
+        action_button_2_long:
+          - service: light.turn_on
+            target:
+              entity_id: light.dormitorio
+            data:
+              brightness_pct: 10  # Luz nocturna
+        
+        action_button_2_double:
+          - service: switch.toggle
+            target:
+              entity_id: switch.ventilador_dormitorio
+        
+        # Botón 3 - Control de medios
+        action_button_3_short:
+          - service: media_player.media_play_pause
+            target:
+              entity_id: media_player.spotify
+        
+        action_button_3_long:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.ultima_accion_control
+            data:
+              value: "Botón 3 mantenido - {{ now().strftime('%H:%M:%S') }}"
+        
+        action_button_3_double:
+          - service: media_player.media_next_track
+            target:
+              entity_id: media_player.spotify
+        
+        # Botón 4 - Acciones varias
+        action_button_4_short:
+          - service: script.turn_on
+            target:
+              entity_id: script.buenas_noches
+        
+        action_button_4_long:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.ultima_accion_control
+            data:
+              value: "Botón 4 mantenido - Activando modo seguridad"
+          - service: alarm_control_panel.alarm_arm_home
+            target:
+              entity_id: alarm_control_panel.casa
+        
+        action_button_4_double:
+          - service: script.turn_on
+            target:
+              entity_id: script.salir_de_casa
+        
+        # Configurar retardo entre repeticiones para bucles
+        long_loop_delay: 250
+        
+        # Debouncing para evitar acciones duplicadas
+        helper_debounce_delay: 50
+
+# ===================================================
+# EJEMPLO COMPLETO PARA ENCONTRAR TU SENSOR
+# ===================================================
+
+# Para encontrar el nombre correcto de tu sensor de acción:
+# 1. Ve a Herramientas de Desarrollador -> Estados
+# 2. Busca entidades que contengan "zg" o "101" o "hobeian"
+# 3. El sensor de acción normalmente se llama algo como:
+#    - sensor.zg_101zs_action
+#    - sensor.control_remoto_action
+#    - sensor.hobeian_zg_101zs_action
+# 4. O usa este template sensor para encontrarlo:
+
+template:
+  - sensor:
+      - name: "Debug ZG-101ZS Entities"
+        state: "OK"
+        attributes:
+          possible_sensors: >
+            {% set sensors = states.sensor 
+              | selectattr('entity_id', 'search', 'zg|101|hobeian|remote')
+              | map(attribute='entity_id') 
+              | list %}
+            {{ sensors if sensors else 'No encontrados con ZG/101/Hobeian/Remote' }}
+
+# ===================================================
+# SCRIPT DE EJEMPLO PARA ALMACENAR ACCIONES
+# ===================================================
+
+script:
+  actualizar_estado_control:
+    alias: "Actualizar Estado del Control"
+    sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ultima_accion_control
+        data:
+          value: "{{ action }} - {{ now().strftime('%d/%m/%Y %H:%M:%S') }}"
+      - service: persistent_notification.create
+        data:
+          title: "Control ZG-101ZS"
+          message: "Acción ejecutada: {{ action }}"
+          notification_id: "zg101zs_action"
+
+# ===================================================
+# SENSOR PARA MOSTRAR LA ÚLTIMA ACCIÓN
+# ===================================================
+
+template:
+  - sensor:
+      - name: "ZG-101ZS Última Acción"
+        state: >
+          {% if states('input_text.zg101zs_ultimo_evento') not in ['unknown', ''] %}
+            {% set event_data = states('input_text.zg101zs_ultimo_evento') | from_json %}
+            {% set action = event_data.action %}
+            {% set button = action.split('_')[0] %}
+            {% set type = action.split('_')[1] %}
+            {% set action_map = {
+              '1': 'Botón 1',
+              '2': 'Botón 2', 
+              '3': 'Botón 3',
+              '4': 'Botón 4'
+            } %}
+            {% set type_map = {
+              'single': 'Pulsación corta',
+              'double': 'Doble clic',
+              'hold': 'Pulsación larga'
+            } %}
+            {{ action_map.get(button, 'Botón ' + button) }} - {{ type_map.get(type, type) }}
+          {% else %}
+            Sin eventos
+          {% endif %}
+        attributes:
+          raw_event: "{{ states('input_text.zg101zs_ultimo_evento') }}"
+          last_action: >
+            {% if states('input_text.zg101zs_ultimo_evento') not in ['unknown', ''] %}
+              {% set event_data = states('input_text.zg101zs_ultimo_evento') | from_json %}
+              {{ event_data.action }}
+            {% else %}
+              none
+            {% endif %}
+          timestamp: >
+            {% if states('input_text.zg101zs_ultimo_evento') not in ['unknown', ''] %}
+              {% set event_data = states('input_text.zg101zs_ultimo_evento') | from_json %}
+              {{ event_data.timestamp }}
+            {% else %}
+              {{ now().isoformat() }}
+            {% endif %}
