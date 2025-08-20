@@ -1,369 +1,214 @@
 blueprint:
-  name: Controller - Hobeian ZG-101ZS (Zigbee2MQTT)
+  name: Hobeian ZG-101ZS Zigbee2MQTT
   description: >
-    # Controller - Hobeian ZG-101ZS Remote Control (Zigbee2MQTT)
-
-    Controla cualquier acción personalizada cuando se presiona un botón en el control remoto Hobeian ZG-101ZS.
-    
-    **Exclusivamente para dispositivos conectados via Zigbee2MQTT.**
-
-    ## Características:
-    - Soporte para 4 botones con pulsaciones simples, dobles y mantenidas
-    - Almacenamiento del estado de la última acción en un helper de texto
-    - Soporte para acciones continuas en pulsaciones largas
-    - Optimizado específicamente para Zigbee2MQTT
-
-    ## Requerimientos:
-    - Dispositivo Hobeian ZG-101ZS conectado via Zigbee2MQTT
-    - Un input_text helper para almacenar el último evento del controlador
-
+    Control remoto Zigbee de 4 botones (ZG-101ZS) con soporte de pulsación simple,
+    doble y larga mediante Zigbee2MQTT. Incluye gestión de debounce y acciones repetitivas
+    durante la pulsación larga.
   domain: automation
   input:
-    # Configuración del Controlador
-    controller_entity:
-      name: Sensor de Acción del Controlador
-      description: >
-        La entidad sensor que reporta las acciones del controlador (ej: sensor.zg101zs_action)
+    remote:
+      name: Dispositivo remoto
+      description: Entidad del sensor de acciones de Zigbee2MQTT (ej: sensor.hobeian_action)
       selector:
         entity:
-          integration: mqtt
           domain: sensor
-          multiple: false
-    
-    # Helper para almacenar eventos
-    helper_last_controller_event:
-      name: Helper - Último Evento del Controlador
-      description: >
-        Selecciona un helper de texto existente o crea uno nuevo desde:
-        Configuración → Dispositivos y Servicios → Helpers → Crear Helper → Texto
-        
-        Usa un helper separado para cada controlador que configures.
+
+    helper_last_event:
+      name: Helper de último evento
+      description: Entidad input_text para registrar el último evento (debe existir previamente)
       selector:
         entity:
           domain: input_text
-          multiple: false
 
-    # Configuración de Acciones
-    # Botón 1
-    action_button_1_short:
-      name: Botón 1 - Pulsación Corta
-      description: Acción a ejecutar cuando se presiona brevemente el botón 1
-      default: []
-      selector:
-        action: {}
-
-    action_button_1_long:
-      name: Botón 1 - Pulsación Larga
-      description: Acción a ejecutar cuando se mantiene presionado el botón 1
-      default: []
-      selector:
-        action: {}
-
-    action_button_1_double:
-      name: Botón 1 - Doble Clic
-      description: Acción a ejecutar cuando se hace doble clic en el botón 1
-      default: []
-      selector:
-        action: {}
-
-    # Botón 2
-    action_button_2_short:
-      name: Botón 2 - Pulsación Corta
-      description: Acción a ejecutar cuando se presiona brevemente el botón 2
-      default: []
-      selector:
-        action: {}
-
-    action_button_2_long:
-      name: Botón 2 - Pulsación Larga
-      description: Acción a ejecutar cuando se mantiene presionado el botón 2
-      default: []
-      selector:
-        action: {}
-
-    action_button_2_double:
-      name: Botón 2 - Doble Clic
-      description: Acción a ejecutar cuando se hace doble clic en el botón 2
-      default: []
-      selector:
-        action: {}
-
-    # Botón 3
-    action_button_3_short:
-      name: Botón 3 - Pulsación Corta
-      description: Acción a ejecutar cuando se presiona brevemente el botón 3
-      default: []
-      selector:
-        action: {}
-
-    action_button_3_long:
-      name: Botón 3 - Pulsación Larga
-      description: Acción a ejecutar cuando se mantiene presionado el botón 3
-      default: []
-      selector:
-        action: {}
-
-    action_button_3_double:
-      name: Botón 3 - Doble Clic
-      description: Acción a ejecutar cuando se hace doble clic en el botón 3
-      default: []
-      selector:
-        action: {}
-
-    # Botón 4
-    action_button_4_short:
-      name: Botón 4 - Pulsación Corta
-      description: Acción a ejecutar cuando se presiona brevemente el botón 4
-      default: []
-      selector:
-        action: {}
-
-    action_button_4_long:
-      name: Botón 4 - Pulsación Larga
-      description: Acción a ejecutar cuando se mantiene presionado el botón 4
-      default: []
-      selector:
-        action: {}
-
-    action_button_4_double:
-      name: Botón 4 - Doble Clic
-      description: Acción a ejecutar cuando se hace doble clic en el botón 4
-      default: []
-      selector:
-        action: {}
-
-    # Configuración de bucles para pulsaciones largas
-    button_1_long_loop:
-      name: Botón 1 - Repetir Acción Larga
-      description: Repetir acción del botón 1 mientras se mantiene presionado
-      default: false
-      selector:
-        boolean: {}
-
-    button_2_long_loop:
-      name: Botón 2 - Repetir Acción Larga
-      description: Repetir acción del botón 2 mientras se mantiene presionado
-      default: false
-      selector:
-        boolean: {}
-
-    button_3_long_loop:
-      name: Botón 3 - Repetir Acción Larga
-      description: Repetir acción del botón 3 mientras se mantiene presionado
-      default: false
-      selector:
-        boolean: {}
-
-    button_4_long_loop:
-      name: Botón 4 - Repetir Acción Larga
-      description: Repetir acción del botón 4 mientras se mantiene presionado
-      default: false
-      selector:
-        boolean: {}
-
-    # Configuración de repetición para bucles
-    long_loop_delay:
-      name: Retardo entre Repeticiones (ms)
-      description: Tiempo en milisegundos entre repeticiones de acciones largas
-      default: 250
-      selector:
-        number:
-          min: 100
-          max: 2000
-          unit_of_measurement: milliseconds
-          mode: box
-          step: 50
-
-    # Configuración de Debouncing
-    helper_debounce_delay:
-      name: Retardo de Debounce
-      description: >
-        Tiempo en milisegundos para evitar ejecuciones duplicadas de acciones.
-        El valor 0 deshabilita el debouncing.
-      default: 0
+    debounce_delay:
+      name: Retraso de debounce
+      description: Tiempo de espera en milisegundos para evitar rebotes
+      default: 200
       selector:
         number:
           min: 0
           max: 1000
-          unit_of_measurement: milliseconds
-          mode: box
-          step: 10
+          unit_of_measurement: ms
+          step: 50
 
-# Variables del blueprint
-variables:
-  controller_entity: !input controller_entity
-  helper_last_controller_event: !input helper_last_controller_event
-  helper_debounce_delay: !input helper_debounce_delay
-  long_loop_delay: !input long_loop_delay
-  
-  # Variables para bucles
-  button_1_long_loop: !input button_1_long_loop
-  button_2_long_loop: !input button_2_long_loop
-  button_3_long_loop: !input button_3_long_loop
-  button_4_long_loop: !input button_4_long_loop
+    long_loop_delay:
+      name: Intervalo de repetición en pulsación larga
+      description: Tiempo en milisegundos entre repeticiones durante una pulsación larga
+      default: 500
+      selector:
+        number:
+          min: 100
+          max: 2000
+          unit_of_measurement: ms
+          step: 50
 
-# Modos de ejecución
+    enable_long_actions:
+      name: Habilitar acciones largas
+      description: Permite que las acciones largas se repitan mientras se mantenga pulsado
+      default: true
+      selector:
+        boolean: {}
+
+    # Acciones por botón y tipo de pulsación
+    button_1_single:
+      name: Botón 1 - Pulsación simple
+      default: []
+      selector:
+        action: {}
+
+    button_1_double:
+      name: Botón 1 - Doble clic
+      default: []
+      selector:
+        action: {}
+
+    button_1_long:
+      name: Botón 1 - Pulsación larga
+      default: []
+      selector:
+        action: {}
+
+    button_2_single:
+      name: Botón 2 - Pulsación simple
+      default: []
+      selector:
+        action: {}
+
+    button_2_double:
+      name: Botón 2 - Doble clic
+      default: []
+      selector:
+        action: {}
+
+    button_2_long:
+      name: Botón 2 - Pulsación larga
+      default: []
+      selector:
+        action: {}
+
+    button_3_single:
+      name: Botón 3 - Pulsación simple
+      default: []
+      selector:
+        action: {}
+
+    button_3_double:
+      name: Botón 3 - Doble clic
+      default: []
+      selector:
+        action: {}
+
+    button_3_long:
+      name: Botón 3 - Pulsación larga
+      default: []
+      selector:
+        action: {}
+
+    button_4_single:
+      name: Botón 4 - Pulsación simple
+      default: []
+      selector:
+        action: {}
+
+    button_4_double:
+      name: Botón 4 - Doble clic
+      default: []
+      selector:
+        action: {}
+
+    button_4_long:
+      name: Botón 4 - Pulsación larga
+      default: []
+      selector:
+        action: {}
+
 mode: restart
-max_exceeded: silent
 
-# Trigger exclusivo para Zigbee2MQTT
 trigger:
   - platform: state
-    entity_id: !input controller_entity
+    entity_id: !input remote
 
-# Condiciones
+variables:
+  trigger_action: "{{ trigger.to_state.state }}"
+  debounce_delay: !input debounce_delay
+  long_loop_delay: !input long_loop_delay
+  enable_long_actions: !input enable_long_actions
+  helper_last_event: !input helper_last_event
+
 condition:
   - condition: template
-    value_template: '{{ trigger.to_state.state not in ["", "None", none, "unavailable", "unknown"] }}'
+    value_template: >
+      {{ trigger_action not in ['None','unknown','unavailable',''] }}
 
-# Acciones
 action:
-  # Aplicar debouncing si está configurado
-  - delay:
-      milliseconds: !input helper_debounce_delay
+  - choose:
+      # Botón 1
+      - conditions: "{{ trigger_action == '1_single' }}"
+        sequence: !input button_1_single
+      - conditions: "{{ trigger_action == '1_double' }}"
+        sequence: !input button_1_double
+      - conditions: "{{ trigger_action == '1_long' and enable_long_actions }}"
+        sequence:
+          - repeat:
+              while:
+                - condition: template
+                  value_template: >
+                    {{ states(helper_last_event) == '1_long' }}
+              sequence:
+                - sequence: !input button_1_long
+                - delay: "{{ long_loop_delay | int / 1000 }}"
 
-  - variables:
-      trigger_action: '{{ trigger.to_state.state }}'
-      last_controller_event: '{{ states(helper_last_controller_event) }}'
-      current_time: '{{ now().isoformat() }}'
+      # Botón 2
+      - conditions: "{{ trigger_action == '2_single' }}"
+        sequence: !input button_2_single
+      - conditions: "{{ trigger_action == '2_double' }}"
+        sequence: !input button_2_double
+      - conditions: "{{ trigger_action == '2_long' and enable_long_actions }}"
+        sequence:
+          - repeat:
+              while:
+                - condition: template
+                  value_template: >
+                    {{ states(helper_last_event) == '2_long' }}
+              sequence:
+                - sequence: !input button_2_long
+                - delay: "{{ long_loop_delay | int / 1000 }}"
 
-  # Almacenar el evento actual en el helper
+      # Botón 3
+      - conditions: "{{ trigger_action == '3_single' }}"
+        sequence: !input button_3_single
+      - conditions: "{{ trigger_action == '3_double' }}"
+        sequence: !input button_3_double
+      - conditions: "{{ trigger_action == '3_long' and enable_long_actions }}"
+        sequence:
+          - repeat:
+              while:
+                - condition: template
+                  value_template: >
+                    {{ states(helper_last_event) == '3_long' }}
+              sequence:
+                - sequence: !input button_3_long
+                - delay: "{{ long_loop_delay | int / 1000 }}"
+
+      # Botón 4
+      - conditions: "{{ trigger_action == '4_single' }}"
+        sequence: !input button_4_single
+      - conditions: "{{ trigger_action == '4_double' }}"
+        sequence: !input button_4_double
+      - conditions: "{{ trigger_action == '4_long' and enable_long_actions }}"
+        sequence:
+          - repeat:
+              while:
+                - condition: template
+                  value_template: >
+                    {{ states(helper_last_event) == '4_long' }}
+              sequence:
+                - sequence: !input button_4_long
+                - delay: "{{ long_loop_delay | int / 1000 }}"
+
+  # Guardar el último evento en el helper
   - service: input_text.set_value
     target:
-      entity_id: !input helper_last_controller_event
+      entity_id: !input helper_last_event
     data:
-      value: '{{ {"action": trigger_action, "timestamp": current_time} | to_json }}'
-
-  # Ejecutar acciones según el botón presionado
-  - choose:
-      # ============ BOTÓN 1 ============
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "1_single" }}'
-        sequence: !input action_button_1_short
-      
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "1_double" }}'
-        sequence: !input action_button_1_double
-
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "1_hold" }}'
-        sequence:
-          - if:
-              - condition: template
-                value_template: '{{ button_1_long_loop }}'
-            then:
-              - repeat:
-                  while:
-                    - condition: template
-                      value_template: >
-                        {% set current_event = states(helper_last_controller_event) | from_json %}
-                        {{ current_event.action == "1_hold" }}
-                  sequence:
-                    - choose:
-                        - conditions: []
-                          sequence: !input action_button_1_long
-                    - delay:
-                        milliseconds: '{{ long_loop_delay }}'
-            else: !input action_button_1_long
-
-      # ============ BOTÓN 2 ============
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "2_single" }}'
-        sequence: !input action_button_2_short
-      
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "2_double" }}'
-        sequence: !input action_button_2_double
-
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "2_hold" }}'
-        sequence:
-          - if:
-              - condition: template
-                value_template: '{{ button_2_long_loop }}'
-            then:
-              - repeat:
-                  while:
-                    - condition: template
-                      value_template: >
-                        {% set current_event = states(helper_last_controller_event) | from_json %}
-                        {{ current_event.action == "2_hold" }}
-                  sequence:
-                    - choose:
-                        - conditions: []
-                          sequence: !input action_button_2_long
-                    - delay:
-                        milliseconds: '{{ long_loop_delay }}'
-            else: !input action_button_2_long
-
-      # ============ BOTÓN 3 ============
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "3_single" }}'
-        sequence: !input action_button_3_short
-      
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "3_double" }}'
-        sequence: !input action_button_3_double
-
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "3_hold" }}'
-        sequence:
-          - if:
-              - condition: template
-                value_template: '{{ button_3_long_loop }}'
-            then:
-              - repeat:
-                  while:
-                    - condition: template
-                      value_template: >
-                        {% set current_event = states(helper_last_controller_event) | from_json %}
-                        {{ current_event.action == "3_hold" }}
-                  sequence:
-                    - choose:
-                        - conditions: []
-                          sequence: !input action_button_3_long
-                    - delay:
-                        milliseconds: '{{ long_loop_delay }}'
-            else: !input action_button_3_long
-
-      # ============ BOTÓN 4 ============
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "4_single" }}'
-        sequence: !input action_button_4_short
-      
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "4_double" }}'
-        sequence: !input action_button_4_double
-
-      - conditions:
-          - condition: template
-            value_template: '{{ trigger_action == "4_hold" }}'
-        sequence:
-          - if:
-              - condition: template
-                value_template: '{{ button_4_long_loop }}'
-            then:
-              - repeat:
-                  while:
-                    - condition: template
-                      value_template: >
-                        {% set current_event = states(helper_last_controller_event) | from_json %}
-                        {{ current_event.action == "4_hold" }}
-                  sequence:
-                    - choose:
-                        - conditions: []
-                          sequence: !input action_button_4_long
-                    - delay:
-                        milliseconds: '{{ long_loop_delay }}'
-            else: !input action_button_4_long
+      value: "{{ trigger_action }}"
