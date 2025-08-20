@@ -8,21 +8,21 @@ blueprint:
   input:
     remote:
       name: Dispositivo remoto
-      description: Entidad del sensor de acciones de Zigbee2MQTT (ej: sensor.hobeian_action)
+      description: "Entidad del sensor de acciones de Zigbee2MQTT (ej: sensor.hobeian_action)"
       selector:
         entity:
           domain: sensor
 
     helper_last_event:
       name: Helper de último evento
-      description: Entidad input_text para registrar el último evento (debe existir previamente)
+      description: "Entidad input_text para registrar el último evento (debe existir previamente)"
       selector:
         entity:
           domain: input_text
 
     debounce_delay:
       name: Retraso de debounce
-      description: Tiempo de espera en milisegundos para evitar rebotes
+      description: "Tiempo de espera en milisegundos para evitar rebotes"
       default: 200
       selector:
         number:
@@ -33,7 +33,7 @@ blueprint:
 
     long_loop_delay:
       name: Intervalo de repetición en pulsación larga
-      description: Tiempo en milisegundos entre repeticiones durante una pulsación larga
+      description: "Tiempo en milisegundos entre repeticiones durante una pulsación larga"
       default: 500
       selector:
         number:
@@ -44,7 +44,7 @@ blueprint:
 
     enable_long_actions:
       name: Habilitar acciones largas
-      description: Permite que las acciones largas se repitan mientras se mantenga pulsado
+      description: "Permite que las acciones largas se repitan mientras se mantenga pulsado"
       default: true
       selector:
         boolean: {}
