@@ -1,206 +1,369 @@
-# ===================================================
-# CREACIÓN DEL HELPER VIA INTERFAZ WEB (RECOMENDADO)
-# ===================================================
+blueprint:
+  name: Controller - Hobeian ZG-101ZS (Zigbee2MQTT)
+  description: >
+    # Controller - Hobeian ZG-101ZS Remote Control (Zigbee2MQTT)
 
-# OPCIÓN 1 - Crear Helper desde la Interfaz Web (MÁS FÁCIL):
-# 1. Ve a: Configuración → Dispositivos y Servicios → Helpers
-# 2. Haz clic en "Crear Helper" (botón azul)
-# 3. Selecciona "Texto"
-# 4. Configura:
-#    - Nombre: "ZG-101ZS Último Evento"
-#    - ID de entidad: input_text.zg101zs_ultimo_evento
-#    - Longitud máxima: 255
-# 5. Guarda y ya estará disponible para seleccionar en el blueprint
+    Controla cualquier acción personalizada cuando se presiona un botón en el control remoto Hobeian ZG-101ZS.
+    
+    **Exclusivamente para dispositivos conectados via Zigbee2MQTT.**
 
-# OPCIÓN 2 - Agregar manualmente a configuration.yaml (ALTERNATIVA):
-input_text:
-  zg101zs_ultimo_evento:
-    name: "ZG-101ZS Último Evento"
-    max: 255
-    initial: ""
+    ## Características:
+    - Soporte para 4 botones con pulsaciones simples, dobles y mantenidas
+    - Almacenamiento del estado de la última acción en un helper de texto
+    - Soporte para acciones continuas en pulsaciones largas
+    - Optimizado específicamente para Zigbee2MQTT
 
-# ===================================================
-# EJEMPLO DE USO DEL BLUEPRINT
-# ===================================================
+    ## Requerimientos:
+    - Dispositivo Hobeian ZG-101ZS conectado via Zigbee2MQTT
+    - Un input_text helper para almacenar el último evento del controlador
 
-automation:
-  - alias: "Control de Luces con ZG-101ZS"
-    use_blueprint:
-      path: hobeian_zg101zs_zigbee2mqtt.yaml
-      input:
-        # Configuración del dispositivo (solo la entidad sensor de acción)
-        controller_entity: sensor.zg_101zs_action  # Cambia por el nombre real de tu sensor
+  domain: automation
+  input:
+    # Configuración del Controlador
+    controller_entity:
+      name: Sensor de Acción del Controlador
+      description: >
+        La entidad sensor que reporta las acciones del controlador (ej: sensor.zg101zs_action)
+      selector:
+        entity:
+          integration: mqtt
+          domain: sensor
+          multiple: false
+    
+    # Helper para almacenar eventos
+    helper_last_controller_event:
+      name: Helper - Último Evento del Controlador
+      description: >
+        Selecciona un helper de texto existente o crea uno nuevo desde:
+        Configuración → Dispositivos y Servicios → Helpers → Crear Helper → Texto
         
-        # Helper para almacenar eventos (seleccionar desde dropdown)
-        helper_last_controller_event: input_text.zg101zs_ultimo_evento
-        
-        # Configurar acciones para cada botón
-        # Botón 1 - Luz del salón
-        action_button_1_short:
-          - service: light.toggle
-            target:
-              entity_id: light.salon
-        
-        action_button_1_long:
-          - service: light.turn_on
-            target:
-              entity_id: light.salon
-            data:
-              brightness_pct: 100
-        
-        action_button_1_double:
-          - service: scene.turn_on
-            target:
-              entity_id: scene.salon_relajante
-        
-        # Botón 2 - Luz del dormitorio
-        action_button_2_short:
-          - service: light.toggle
-            target:
-              entity_id: light.dormitorio
-        
-        action_button_2_long:
-          - service: light.turn_on
-            target:
-              entity_id: light.dormitorio
-            data:
-              brightness_pct: 10  # Luz nocturna
-        
-        action_button_2_double:
-          - service: switch.toggle
-            target:
-              entity_id: switch.ventilador_dormitorio
-        
-        # Botón 3 - Control de medios
-        action_button_3_short:
-          - service: media_player.media_play_pause
-            target:
-              entity_id: media_player.spotify
-        
-        action_button_3_long:
-          - service: input_text.set_value
-            target:
-              entity_id: input_text.ultima_accion_control
-            data:
-              value: "Botón 3 mantenido - {{ now().strftime('%H:%M:%S') }}"
-        
-        action_button_3_double:
-          - service: media_player.media_next_track
-            target:
-              entity_id: media_player.spotify
-        
-        # Botón 4 - Acciones varias
-        action_button_4_short:
-          - service: script.turn_on
-            target:
-              entity_id: script.buenas_noches
-        
-        action_button_4_long:
-          - service: input_text.set_value
-            target:
-              entity_id: input_text.ultima_accion_control
-            data:
-              value: "Botón 4 mantenido - Activando modo seguridad"
-          - service: alarm_control_panel.alarm_arm_home
-            target:
-              entity_id: alarm_control_panel.casa
-        
-        action_button_4_double:
-          - service: script.turn_on
-            target:
-              entity_id: script.salir_de_casa
-        
-        # Configurar retardo entre repeticiones para bucles
-        long_loop_delay: 250
-        
-        # Debouncing para evitar acciones duplicadas
-        helper_debounce_delay: 50
+        Usa un helper separado para cada controlador que configures.
+      selector:
+        entity:
+          domain: input_text
+          multiple: false
 
-# ===================================================
-# EJEMPLO COMPLETO PARA ENCONTRAR TU SENSOR
-# ===================================================
+    # Configuración de Acciones
+    # Botón 1
+    action_button_1_short:
+      name: Botón 1 - Pulsación Corta
+      description: Acción a ejecutar cuando se presiona brevemente el botón 1
+      default: []
+      selector:
+        action: {}
 
-# Para encontrar el nombre correcto de tu sensor de acción:
-# 1. Ve a Herramientas de Desarrollador -> Estados
-# 2. Busca entidades que contengan "zg" o "101" o "hobeian"
-# 3. El sensor de acción normalmente se llama algo como:
-#    - sensor.zg_101zs_action
-#    - sensor.control_remoto_action
-#    - sensor.hobeian_zg_101zs_action
-# 4. O usa este template sensor para encontrarlo:
+    action_button_1_long:
+      name: Botón 1 - Pulsación Larga
+      description: Acción a ejecutar cuando se mantiene presionado el botón 1
+      default: []
+      selector:
+        action: {}
 
-template:
-  - sensor:
-      - name: "Debug ZG-101ZS Entities"
-        state: "OK"
-        attributes:
-          possible_sensors: >
-            {% set sensors = states.sensor 
-              | selectattr('entity_id', 'search', 'zg|101|hobeian|remote')
-              | map(attribute='entity_id') 
-              | list %}
-            {{ sensors if sensors else 'No encontrados con ZG/101/Hobeian/Remote' }}
+    action_button_1_double:
+      name: Botón 1 - Doble Clic
+      description: Acción a ejecutar cuando se hace doble clic en el botón 1
+      default: []
+      selector:
+        action: {}
 
-# ===================================================
-# SCRIPT DE EJEMPLO PARA ALMACENAR ACCIONES
-# ===================================================
+    # Botón 2
+    action_button_2_short:
+      name: Botón 2 - Pulsación Corta
+      description: Acción a ejecutar cuando se presiona brevemente el botón 2
+      default: []
+      selector:
+        action: {}
 
-script:
-  actualizar_estado_control:
-    alias: "Actualizar Estado del Control"
-    sequence:
-      - service: input_text.set_value
-        target:
-          entity_id: input_text.ultima_accion_control
-        data:
-          value: "{{ action }} - {{ now().strftime('%d/%m/%Y %H:%M:%S') }}"
-      - service: persistent_notification.create
-        data:
-          title: "Control ZG-101ZS"
-          message: "Acción ejecutada: {{ action }}"
-          notification_id: "zg101zs_action"
+    action_button_2_long:
+      name: Botón 2 - Pulsación Larga
+      description: Acción a ejecutar cuando se mantiene presionado el botón 2
+      default: []
+      selector:
+        action: {}
 
-# ===================================================
-# SENSOR PARA MOSTRAR LA ÚLTIMA ACCIÓN
-# ===================================================
+    action_button_2_double:
+      name: Botón 2 - Doble Clic
+      description: Acción a ejecutar cuando se hace doble clic en el botón 2
+      default: []
+      selector:
+        action: {}
 
-template:
-  - sensor:
-      - name: "ZG-101ZS Última Acción"
-        state: >
-          {% if states('input_text.zg101zs_ultimo_evento') not in ['unknown', ''] %}
-            {% set event_data = states('input_text.zg101zs_ultimo_evento') | from_json %}
-            {% set action = event_data.action %}
-            {% set button = action.split('_')[0] %}
-            {% set type = action.split('_')[1] %}
-            {% set action_map = {
-              '1': 'Botón 1',
-              '2': 'Botón 2', 
-              '3': 'Botón 3',
-              '4': 'Botón 4'
-            } %}
-            {% set type_map = {
-              'single': 'Pulsación corta',
-              'double': 'Doble clic',
-              'hold': 'Pulsación larga'
-            } %}
-            {{ action_map.get(button, 'Botón ' + button) }} - {{ type_map.get(type, type) }}
-          {% else %}
-            Sin eventos
-          {% endif %}
-        attributes:
-          raw_event: "{{ states('input_text.zg101zs_ultimo_evento') }}"
-          last_action: >
-            {% if states('input_text.zg101zs_ultimo_evento') not in ['unknown', ''] %}
-              {% set event_data = states('input_text.zg101zs_ultimo_evento') | from_json %}
-              {{ event_data.action }}
-            {% else %}
-              none
-            {% endif %}
-          timestamp: >
-            {% if states('input_text.zg101zs_ultimo_evento') not in ['unknown', ''] %}
-              {% set event_data = states('input_text.zg101zs_ultimo_evento') | from_json %}
-              {{ event_data.timestamp }}
-            {% else %}
-              {{ now().isoformat() }}
-            {% endif %}
+    # Botón 3
+    action_button_3_short:
+      name: Botón 3 - Pulsación Corta
+      description: Acción a ejecutar cuando se presiona brevemente el botón 3
+      default: []
+      selector:
+        action: {}
+
+    action_button_3_long:
+      name: Botón 3 - Pulsación Larga
+      description: Acción a ejecutar cuando se mantiene presionado el botón 3
+      default: []
+      selector:
+        action: {}
+
+    action_button_3_double:
+      name: Botón 3 - Doble Clic
+      description: Acción a ejecutar cuando se hace doble clic en el botón 3
+      default: []
+      selector:
+        action: {}
+
+    # Botón 4
+    action_button_4_short:
+      name: Botón 4 - Pulsación Corta
+      description: Acción a ejecutar cuando se presiona brevemente el botón 4
+      default: []
+      selector:
+        action: {}
+
+    action_button_4_long:
+      name: Botón 4 - Pulsación Larga
+      description: Acción a ejecutar cuando se mantiene presionado el botón 4
+      default: []
+      selector:
+        action: {}
+
+    action_button_4_double:
+      name: Botón 4 - Doble Clic
+      description: Acción a ejecutar cuando se hace doble clic en el botón 4
+      default: []
+      selector:
+        action: {}
+
+    # Configuración de bucles para pulsaciones largas
+    button_1_long_loop:
+      name: Botón 1 - Repetir Acción Larga
+      description: Repetir acción del botón 1 mientras se mantiene presionado
+      default: false
+      selector:
+        boolean: {}
+
+    button_2_long_loop:
+      name: Botón 2 - Repetir Acción Larga
+      description: Repetir acción del botón 2 mientras se mantiene presionado
+      default: false
+      selector:
+        boolean: {}
+
+    button_3_long_loop:
+      name: Botón 3 - Repetir Acción Larga
+      description: Repetir acción del botón 3 mientras se mantiene presionado
+      default: false
+      selector:
+        boolean: {}
+
+    button_4_long_loop:
+      name: Botón 4 - Repetir Acción Larga
+      description: Repetir acción del botón 4 mientras se mantiene presionado
+      default: false
+      selector:
+        boolean: {}
+
+    # Configuración de repetición para bucles
+    long_loop_delay:
+      name: Retardo entre Repeticiones (ms)
+      description: Tiempo en milisegundos entre repeticiones de acciones largas
+      default: 250
+      selector:
+        number:
+          min: 100
+          max: 2000
+          unit_of_measurement: milliseconds
+          mode: box
+          step: 50
+
+    # Configuración de Debouncing
+    helper_debounce_delay:
+      name: Retardo de Debounce
+      description: >
+        Tiempo en milisegundos para evitar ejecuciones duplicadas de acciones.
+        El valor 0 deshabilita el debouncing.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: milliseconds
+          mode: box
+          step: 10
+
+# Variables del blueprint
+variables:
+  controller_entity: !input controller_entity
+  helper_last_controller_event: !input helper_last_controller_event
+  helper_debounce_delay: !input helper_debounce_delay
+  long_loop_delay: !input long_loop_delay
+  
+  # Variables para bucles
+  button_1_long_loop: !input button_1_long_loop
+  button_2_long_loop: !input button_2_long_loop
+  button_3_long_loop: !input button_3_long_loop
+  button_4_long_loop: !input button_4_long_loop
+
+# Modos de ejecución
+mode: restart
+max_exceeded: silent
+
+# Trigger exclusivo para Zigbee2MQTT
+trigger:
+  - platform: state
+    entity_id: !input controller_entity
+
+# Condiciones
+condition:
+  - condition: template
+    value_template: '{{ trigger.to_state.state not in ["", "None", none, "unavailable", "unknown"] }}'
+
+# Acciones
+action:
+  # Aplicar debouncing si está configurado
+  - delay:
+      milliseconds: !input helper_debounce_delay
+
+  - variables:
+      trigger_action: '{{ trigger.to_state.state }}'
+      last_controller_event: '{{ states(helper_last_controller_event) }}'
+      current_time: '{{ now().isoformat() }}'
+
+  # Almacenar el evento actual en el helper
+  - service: input_text.set_value
+    target:
+      entity_id: !input helper_last_controller_event
+    data:
+      value: '{{ {"action": trigger_action, "timestamp": current_time} | to_json }}'
+
+  # Ejecutar acciones según el botón presionado
+  - choose:
+      # ============ BOTÓN 1 ============
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "1_single" }}'
+        sequence: !input action_button_1_short
+      
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "1_double" }}'
+        sequence: !input action_button_1_double
+
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "1_hold" }}'
+        sequence:
+          - if:
+              - condition: template
+                value_template: '{{ button_1_long_loop }}'
+            then:
+              - repeat:
+                  while:
+                    - condition: template
+                      value_template: >
+                        {% set current_event = states(helper_last_controller_event) | from_json %}
+                        {{ current_event.action == "1_hold" }}
+                  sequence:
+                    - choose:
+                        - conditions: []
+                          sequence: !input action_button_1_long
+                    - delay:
+                        milliseconds: '{{ long_loop_delay }}'
+            else: !input action_button_1_long
+
+      # ============ BOTÓN 2 ============
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "2_single" }}'
+        sequence: !input action_button_2_short
+      
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "2_double" }}'
+        sequence: !input action_button_2_double
+
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "2_hold" }}'
+        sequence:
+          - if:
+              - condition: template
+                value_template: '{{ button_2_long_loop }}'
+            then:
+              - repeat:
+                  while:
+                    - condition: template
+                      value_template: >
+                        {% set current_event = states(helper_last_controller_event) | from_json %}
+                        {{ current_event.action == "2_hold" }}
+                  sequence:
+                    - choose:
+                        - conditions: []
+                          sequence: !input action_button_2_long
+                    - delay:
+                        milliseconds: '{{ long_loop_delay }}'
+            else: !input action_button_2_long
+
+      # ============ BOTÓN 3 ============
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "3_single" }}'
+        sequence: !input action_button_3_short
+      
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "3_double" }}'
+        sequence: !input action_button_3_double
+
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "3_hold" }}'
+        sequence:
+          - if:
+              - condition: template
+                value_template: '{{ button_3_long_loop }}'
+            then:
+              - repeat:
+                  while:
+                    - condition: template
+                      value_template: >
+                        {% set current_event = states(helper_last_controller_event) | from_json %}
+                        {{ current_event.action == "3_hold" }}
+                  sequence:
+                    - choose:
+                        - conditions: []
+                          sequence: !input action_button_3_long
+                    - delay:
+                        milliseconds: '{{ long_loop_delay }}'
+            else: !input action_button_3_long
+
+      # ============ BOTÓN 4 ============
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "4_single" }}'
+        sequence: !input action_button_4_short
+      
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "4_double" }}'
+        sequence: !input action_button_4_double
+
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger_action == "4_hold" }}'
+        sequence:
+          - if:
+              - condition: template
+                value_template: '{{ button_4_long_loop }}'
+            then:
+              - repeat:
+                  while:
+                    - condition: template
+                      value_template: >
+                        {% set current_event = states(helper_last_controller_event) | from_json %}
+                        {{ current_event.action == "4_hold" }}
+                  sequence:
+                    - choose:
+                        - conditions: []
+                          sequence: !input action_button_4_long
+                    - delay:
+                        milliseconds: '{{ long_loop_delay }}'
+            else: !input action_button_4_long
